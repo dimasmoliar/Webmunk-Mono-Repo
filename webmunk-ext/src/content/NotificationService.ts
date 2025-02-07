@@ -20,25 +20,30 @@ export class NotificationService {
   }
 
   private displayNotification(text: string): void {
+    if (document.getElementById('webmunk-notification')) return;
+    this.sendResponseToService();
+
     const styles = document.createElement('style');
     styles.textContent = `
       @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&display=swap');
 
-      .wrapper {
+      .notification-wrapper {
         position: fixed;
         top: 0;
         left: 0;
         z-index: 10000;
 
+        display: flex;
+        justify-content: center;
+        align-items: center;
         width: 100%;
         height: 100%;
+
         pointer-events: none;
       }
 
       .notification-container {
         position: fixed;
-        top: 40%;
-        left: 40%;
         z-index: 10000;
 
         display: flex;
@@ -60,15 +65,6 @@ export class NotificationService {
         white-space: nowrap;
         text-overflow: ellipsis;
         pointer-events: all;
-      }
-
-      .notification-disappear {
-        animation: disappear 0.5s linear forwards;
-      }
-
-      @keyframes disappear {
-        0% { opacity: 1; }
-        100% { opacity: 0; }
       }
 
       @keyframes appear {
@@ -98,7 +94,8 @@ export class NotificationService {
 
     document.head.appendChild(styles);
     const wrapper = document.createElement('div');
-    wrapper.classList.add('wrapper');
+    wrapper.classList.add('notification-wrapper');
+    wrapper.id = 'webmunk-notification';
 
     const notificationContainer = document.createElement('div');
     notificationContainer.classList.add('notification-container');
@@ -119,15 +116,10 @@ export class NotificationService {
 
     notificationContainer.innerHTML = notificationContent;
     wrapper.appendChild(notificationContainer);
-    document.body.appendChild(wrapper);
+    document.documentElement.appendChild(wrapper);
 
     document.getElementById('close-button')!.addEventListener('click', () => {
-      notificationContainer.classList.add('notification-disappear');
-      this.sendResponseToService();
-
-      setTimeout(() => {
-        wrapper.remove();
-      }, 1000);
+      wrapper.remove();
     });
 
     document.querySelector('.open-extensions-link')?.addEventListener('click', (event) => {

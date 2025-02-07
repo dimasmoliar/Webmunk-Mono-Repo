@@ -7,11 +7,25 @@ export class RateService {
   }
 
   private async initializeLastNotificationTime(): Promise<void> {
-    // We use Date.now() to ensure the first 20 minutes pass after the user loads the extension before applying the logic of getLastAdsRateNotificationTime().
-    this.lastNotificationTimestamp = (await this.getLastAdsRateNotificationTime()) || Date.now();
+    const storedTimestamp = await this.getLastAdsRateNotificationTime();
+
+    if (!storedTimestamp) {
+      this.lastNotificationTimestamp = Date.now();
+      await chrome.storage.local.set({ lastAdsRateNotificationTime: this.lastNotificationTimestamp });
+    } else {
+      this.lastNotificationTimestamp = storedTimestamp;
+    }
+  }
+
+  private async isExtensionHasToBeRemoved(): Promise<boolean> {
+    const result = await chrome.storage.local.get('removeModalShowed');
+
+    return result.removeModalShowed || false;
   }
 
   private async shouldNotify(): Promise<boolean> {
+    if (await this.isExtensionHasToBeRemoved()) return false;
+
     const currentTime = Date.now();
 
     // 20 min
